@@ -248,6 +248,51 @@ export const createReward = async (reward: Omit<Reward, 'id'>): Promise<Reward |
     }
 };
 
+export const updateReward = async (reward: Reward): Promise<boolean> => {
+    if (!isSupabaseConfigured() || !supabase) return false;
+
+    try {
+        const { error } = await supabase
+            .from('rewards')
+            .update({
+                title: reward.title,
+                cost: reward.cost,
+                icon: reward.icon,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', reward.id);
+
+        if (error) {
+            console.error('Error updating reward:', error);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error updating reward:', error);
+        return false;
+    }
+};
+
+export const deleteReward = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured() || !supabase) return false;
+
+    try {
+        const { error } = await supabase
+            .from('rewards')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting reward:', error);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error deleting reward:', error);
+        return false;
+    }
+};
+
 // ============ BATCH UPDATES ============
 
 export const resetDailyStatus = async (): Promise<boolean> => {
@@ -280,6 +325,101 @@ export const updateHabitsHealth = async (habits: Habit[]): Promise<boolean> => {
         return true;
     } catch (error) {
         console.error('Error updating habits health:', error);
+        return false;
+    }
+};
+
+// ============ BACKUP/RESTORE FUNCTIONS ============
+
+export const exportGameState = (gameState: GameState): void => {
+    const dataStr = JSON.stringify(gameState, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `questbound-backup-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+};
+
+export const validateGameState = (data: any): data is GameState => {
+    return (
+        data &&
+        typeof data === 'object' &&
+        Array.isArray(data.habits) &&
+        Array.isArray(data.rewards) &&
+        data.stats &&
+        typeof data.stats.name === 'string' &&
+        typeof data.stats.level === 'number'
+    );
+};
+
+export const resetAllProgress = async (): Promise<boolean> => {
+    if (!isSupabaseConfigured() || !supabase) {
+        localStorage.removeItem('questbound_state');
+        return true;
+    }
+
+    try {
+        // Delete all habits
+        await supabase
+            .from('habits')
+            .delete()
+            .eq('user_id', DEFAULT_USER_ID);
+
+        // Delete all rewards
+        await supabase
+            .from('rewards')
+            .delete()
+            .eq('user_id', DEFAULT_USER_ID);
+
+        // Reset stats
+        await supabase
+            .from('user_stats')
+            .upsert({
+                user_id: DEFAULT_USER_ID,
+                ...INITIAL_STATS,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+        localStorage.removeItem('questbound_state');
+        return true;
+    } catch (error) {
+        console.error('Error resetting progress:', error);
+        return false;
+    }
+};
+export const importGameState = async (gameState: GameState): Promise<boolean> => {
+    if (!validateGameState(gameState)) return false;
+
+    try {
+        await resetAllProgress();
+
+        // Save stats
+        await saveStats(gameState.stats);
+
+        // Save habits
+        if (isSupabaseConfigured() && supabase) {
+            for (const habit of gameState.habits) {
+                await supabase.from('habits').insert(habitToDb(habit));
+            }
+            for (const reward of gameState.rewards) {
+                await supabase.from('rewards').insert({
+                    user_id: DEFAULT_USER_ID,
+                    title: reward.title,
+                    cost: reward.cost,
+                    icon: reward.icon || '🎁'
+                });
+            }
+        } else {
+            localStorage.setItem('questbound_state', JSON.stringify(gameState));
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error importing game state:', error);
         return false;
     }
 };

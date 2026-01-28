@@ -1,46 +1,47 @@
+
 import React, { useState, useEffect } from 'react';
 import { Difficulty, Frequency, Habit } from '../types';
 import { getDifficultySuggestion } from '../services/geminiService';
 
-interface AddHabitModalProps {
+interface EditHabitModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (habit: Partial<Habit>) => void;
-  initialHabit?: Habit | null;
+  onSave: (habit: Habit) => void;
+  habit: Habit | null;
 }
 
-const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onSave, initialHabit }) => {
+const EditHabitModal: React.FC<EditHabitModalProps> = ({ isOpen, onClose, onSave, habit }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('Easy');
   const [frequency, setFrequency] = useState<Frequency>('Daily');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Pre-populate form when habit changes
   useEffect(() => {
-    if (initialHabit) {
-      setTitle(initialHabit.title);
-      setDescription(initialHabit.description);
-      setDifficulty(initialHabit.difficulty);
-      setFrequency(initialHabit.frequency);
-    } else {
-      setTitle('');
-      setDescription('');
-      setDifficulty('Easy');
-      setFrequency('Daily');
+    if (habit) {
+      setTitle(habit.title);
+      setDescription(habit.description);
+      setDifficulty(habit.difficulty);
+      setFrequency(habit.frequency);
     }
-  }, [initialHabit, isOpen]);
+  }, [habit]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !habit) return null;
 
   const handleSubmit = () => {
     if (!title.trim()) return;
-    onSave({
-      ...initialHabit,
-      title,
-      description,
+
+    // Preserve all non-editable fields
+    const updatedHabit: Habit = {
+      ...habit,
+      title: title.trim(),
+      description: description.trim(),
       difficulty,
       frequency
-    });
+    };
+
+    onSave(updatedHabit);
     onClose();
   };
 
@@ -62,9 +63,7 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onSave, 
           ✕
         </button>
 
-        <h2 className="cinzel text-2xl font-bold text-yellow-500 mb-6">
-          {initialHabit ? 'Reforge Quest' : 'Commission New Quest'}
-        </h2>
+        <h2 className="cinzel text-2xl font-bold text-yellow-500 mb-6">Modify Quest Details</h2>
 
         <div className="space-y-4">
           <div className="space-y-1">
@@ -93,11 +92,11 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onSave, 
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex justify-between items-center">
                 Difficulty
                 <button
-                  onClick={handleAIAnalyze}
-                  disabled={isAnalyzing || !title}
-                  className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 disabled:opacity-50"
+                    onClick={handleAIAnalyze}
+                    disabled={isAnalyzing || !title}
+                    className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 disabled:opacity-50"
                 >
-                  {isAnalyzing ? 'Consulting...' : '✨ Ask AI'}
+                    {isAnalyzing ? 'Consulting...' : '✨ Ask AI'}
                 </button>
               </label>
               <select
@@ -136,7 +135,7 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onSave, 
               disabled={!title.trim()}
               className="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl font-bold cinzel shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {initialHabit ? 'Confirm Changes' : 'Accept Quest'}
+              Update Quest
             </button>
           </div>
         </div>
@@ -145,5 +144,4 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onSave, 
   );
 };
 
-export default AddHabitModal;
-
+export default EditHabitModal;

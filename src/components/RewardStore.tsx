@@ -8,9 +8,11 @@ interface RewardStoreProps {
   onPurchase: (reward: Reward) => void;
   rewards: Reward[];
   onAddReward: (reward: Omit<Reward, 'id'>) => void;
+  onEditReward: (reward: Reward) => void;
+  onDeleteReward: (id: string) => void;
 }
 
-const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, onAddReward }) => {
+const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, onAddReward, onEditReward, onDeleteReward }) => {
   const [showAdd, setShowAdd] = useState(false);
   const [newReward, setNewReward] = useState({ title: '', cost: 50, icon: '🎁' });
 
@@ -69,7 +71,16 @@ const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, on
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map(reward => (
-          <div key={reward.id} className="rpg-card p-5 rounded-2xl border-slate-700/50 hover:border-yellow-500/30 transition-all group">
+          <div key={reward.id} className="rpg-card p-5 rounded-2xl border-slate-700/50 hover:border-yellow-500/30 transition-all group relative">
+            {/* Delete button in top-right corner */}
+            <button
+              onClick={() => onDeleteReward(reward.id)}
+              className="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Remove from shop"
+            >
+              ✕
+            </button>
+
             <div className="flex items-center gap-4 mb-4">
               <span className="text-4xl">{reward.icon}</span>
               <div className="flex-1">
@@ -80,17 +91,27 @@ const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, on
                 </div>
               </div>
             </div>
-            <button 
-              onClick={() => onPurchase(reward)}
-              disabled={gold < reward.cost}
-              className={`w-full py-2 rounded-xl font-bold transition-all
-                ${gold >= reward.cost 
-                  ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white shadow-lg' 
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                }`}
-            >
-              {gold >= reward.cost ? 'Acquire' : 'Not Enough Gold'}
-            </button>
+
+            {/* Modify + Acquire buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onEditReward(reward)}
+                className="flex-1 py-2 rounded-xl font-bold border border-slate-700 text-slate-400 hover:bg-slate-800 transition-all"
+              >
+                Modify
+              </button>
+              <button
+                onClick={() => onPurchase(reward)}
+                disabled={gold < reward.cost}
+                className={`flex-1 py-2 rounded-xl font-bold transition-all
+                  ${gold >= reward.cost
+                    ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white shadow-lg'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                  }`}
+              >
+                {gold >= reward.cost ? 'Acquire' : 'Not Enough Gold'}
+              </button>
+            </div>
           </div>
         ))}
       </div>

@@ -8,9 +8,11 @@ interface HabitCardProps {
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onSkip: (id: string) => void;
+  onEdit: (id: string) => void;
+  onUndo: (id: string) => void;
 }
 
-const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSkip }) => {
+const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSkip, onEdit, onUndo }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [floatText, setFloatText] = useState<{x: number, y: number, text: string} | null>(null);
 
@@ -116,7 +118,15 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSk
             )}
             </button>
             
-            {!habit.completedToday && (
+            {habit.completedToday ? (
+                <button
+                    onClick={() => onUndo(habit.id)}
+                    className="text-[10px] text-yellow-500 hover:text-yellow-300 font-bold uppercase tracking-wider py-1"
+                    title="Undo today's completion"
+                >
+                    Undo
+                </button>
+            ) : (
                 <button
                     onClick={() => onSkip(habit.id)}
                     className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider py-1"
@@ -133,12 +143,20 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSk
           <span className="text-blue-400 font-bold">+{XP_MAP[habit.difficulty]} XP</span>
           <span className="text-yellow-500 font-bold">+{GOLD_MAP[habit.difficulty]} Gold</span>
         </div>
-        <button 
-          onClick={() => onDelete(habit.id)}
-          className="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          Abandon
-        </button>
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={() => onEdit(habit.id)}
+            className="text-slate-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Modify
+          </button>
+          <button
+            onClick={() => onDelete(habit.id)}
+            className="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Abandon
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,9 @@ import HabitCard from './components/HabitCard';
 import SpiritGuide from './components/SpiritGuide';
 import RewardStore from './components/RewardStore';
 import AddHabitModal from './components/AddHabitModal';
+import EditHabitModal from './components/EditHabitModal';
+import EditRewardModal from './components/EditRewardModal';
+import SettingsModal from './components/SettingsModal';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ToastContainer from './components/ToastContainer';
 import DailyBriefingModal from './components/DailyBriefingModal';
@@ -19,9 +22,16 @@ import {
   createHabit,
   deleteHabit as deleteHabitFromDb,
   createReward,
+  updateReward,
+  deleteReward,
   resetDailyStatus,
-  updateHabitsHealth
+  updateHabitsHealth,
+  exportGameState,
+  importGameState,
+  validateGameState,
+  resetAllProgress
 } from './services/dataService';
+
 import { isSupabaseConfigured } from './services/supabaseClient';
 
 const App: React.FC = () => {
@@ -36,6 +46,17 @@ const App: React.FC = () => {
   const [dailyMessage, setDailyMessage] = useState('');
   const [levelUpData, setLevelUpData] = useState<LevelUpData | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+
+  // Edit Habit States
+  const [showEditHabitModal, setShowEditHabitModal] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+
+  // Edit Reward States
+  const [showEditRewardModal, setShowEditRewardModal] = useState(false);
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
+
+  // Settings State
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Load data on mount
   useEffect(() => {
@@ -411,6 +432,223 @@ const App: React.FC = () => {
     }
   };
 
+  const handleEditHabit = (id: string) => {
+    const habit = gameState?.habits.find(h => h.id === id);
+    if (habit) {
+      setEditingHabit(habit);
+      setShowEditHabitModal(true);
+    }
+  };
+
+  const updateHabit = async (updatedHabit: Habit) => {
+    const success = await saveHabit(updatedHabit);
+
+    if (success) {
+      setGameState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          habits: prev.habits.map(h => h.id === updatedHabit.id ? updatedHabit : h)
+        };
+      });
+      addToast("Quest Modified", `${updatedHabit.title} has been updated.`, 'success');
+    } else {
+      addToast("Update Failed", "Could not save changes. Try again.", 'warning');
+    }
+
+    setShowEditHabitModal(false);
+    setEditingHabit(null);
+  };
+
+  const undoCompletion = async (id: string) => {
+    if (!gameState) return;
+
+    const habit = gameState.habits.find(h => h.id === id);
+    if (!habit || !habit.completedToday) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!window.confirm(
+      `⚠️ UNDO QUEST COMPLETION? ⚠️\n\n` +
+      `This will reverse today's completion of "${habit.title}".\n\n` +
+      `You will lose:\n` +
+      `- ${XP_MAP[habit.difficulty]} XP\n` +
+      `- ${GOLD_MAP[habit.difficulty]} Gold\n` +
+      `- 1 Streak Day\n\n` +
+      `Are you sure?`
+    )) {
+      return;
+    }
+
+    const xpLoss = XP_MAP[habit.difficulty];
+    const goldLoss = GOLD_MAP[habit.difficulty];
+
+    let { xp, gold, level, nextLevelXp, hp, maxHp, name, classTitle } = gameState.stats;
+
+    xp = Math.max(0, xp - xpLoss);
+    gold = Math.max(0, gold - goldLoss);
+    const newStreak = Math.max(0, habit.streak - 1);
+    const updatedCompletionDates = (habit.completionDates || []).filter(date => date !== today);
+
+    const updatedHabit: Habit = {
+      ...habit,
+      completedToday: false,
+      streak: newStreak,
+      completionDates: updatedCompletionDates,
+    };
+
+    const newStats = { name, classTitle, level, xp, nextLevelXp, gold, hp, maxHp };
+
+    await saveStats(newStats);
+    await saveHabit(updatedHabit);
+
+    setGameState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        stats: newStats,
+        habits: prev.habits.map(h => h.id === id ? updatedHabit : h)
+      };
+    });
+
+    addToast("Completion Undone", `${habit.title} marked incomplete.`, 'info');
+  };
+
+  const handleEditReward = (reward: Reward) => {
+    setEditingReward(reward);
+    setShowEditRewardModal(true);
+  };
+
+  const updateRewardHandler = async (updatedReward: Reward) => {
+    const success = await updateReward(updatedReward);
+
+    if (success) {
+      setGameState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          rewards: prev.rewards.map(r => r.id === updatedReward.id ? updatedReward : r)
+        };
+      });
+      addToast("Reward Modified", `${updatedReward.title} has been updated.`, 'success');
+    } else {
+      addToast("Update Failed", "Could not save changes. Try again.", 'warning');
+    }
+
+    setShowEditRewardModal(false);
+    setEditingReward(null);
+  };
+
+  const handleDeleteReward = async (id: string) => {
+    const reward = gameState?.rewards.find(r => r.id === id);
+    if (!reward) return;
+
+    if (window.confirm(`Remove "${reward.title}" from the bazaar?`)) {
+      const success = await deleteReward(id);
+
+      if (success) {
+        setGameState(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rewards: prev.rewards.filter(r => r.id !== id)
+          };
+        });
+        addToast("Reward Removed", `${reward.title} removed from shop.`, 'info');
+      } else {
+        addToast("Deletion Failed", "Could not remove reward. Try again.", 'warning');
+      }
+    }
+  };
+
+  const handleUpdatePlayerName = async (newName: string) => {
+    if (!newName.trim() || !gameState) return;
+
+    const newStats = { ...gameState.stats, name: newName };
+    const success = await saveStats(newStats);
+
+    if (success) {
+      setGameState(prev => {
+        if (!prev) return prev;
+        return { ...prev, stats: newStats };
+      });
+      addToast("Identity Updated", `Welcome, ${newName}!`, 'success');
+    } else {
+      addToast("Update Failed", "Could not save name. Try again.", 'warning');
+    }
+  };
+
+  const handleResetProgress = async () => {
+    const confirmed = window.confirm(
+      `⚠️ RESET ALL PROGRESS? ⚠️\n\n` +
+      `This will permanently delete:\n` +
+      `- All quests and habits\n` +
+      `- All rewards\n` +
+      `- Your stats, level, and gold\n` +
+      `- All progress history\n\n` +
+      `Type "RESET" to confirm.`
+    );
+
+    if (!confirmed) return;
+
+    const confirmText = prompt("Type RESET to confirm:");
+    if (confirmText !== "RESET") {
+      addToast("Reset Cancelled", "Progress preserved.", 'info');
+      return;
+    }
+
+    const success = await resetAllProgress();
+
+    if (success) {
+      setGameState({
+        habits: [],
+        rewards: [],
+        stats: INITIAL_STATS,
+        history: []
+      });
+      addToast("Progress Reset", "Your journey begins anew.", 'info');
+      setShowSettingsModal(false);
+    } else {
+      addToast("Reset Failed", "Could not reset progress. Try again.", 'warning');
+    }
+  };
+
+  const handleExport = () => {
+    if (gameState) {
+      exportGameState(gameState);
+      addToast("Data Exported", "Backup saved to downloads.", 'success');
+    }
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+
+        if (validateGameState(data)) {
+          setIsLoading(true);
+          const success = await importGameState(data);
+
+          if (success) {
+            setGameState(data);
+            addToast("Data Restored", "Your journey has been successfully restored.", 'success');
+            setShowSettingsModal(false);
+          } else {
+            addToast("Restore Failed", "Could not synchronize with the cloud.", 'warning');
+          }
+          setIsLoading(false);
+        } else {
+          addToast("Import Failed", "Invalid save file format.", 'warning');
+        }
+      } catch (error) {
+        addToast("Import Failed", "Could not read save file.", 'warning');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+
   const purchaseReward = async (reward: Reward) => {
     if (!gameState || gameState.stats.gold < reward.cost) return;
 
@@ -452,7 +690,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen pb-24 bg-slate-950 text-slate-100 selection:bg-yellow-500/30 ${isShaking ? 'screen-shake' : ''}`}>
-      <StatsHeader stats={gameState.stats} />
+      <StatsHeader stats={gameState.stats} onOpenSettings={() => setShowSettingsModal(true)} />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <DailyBriefingModal
@@ -533,6 +771,8 @@ const App: React.FC = () => {
                     onComplete={completeHabit}
                     onDelete={handleDeleteHabit}
                     onSkip={skipHabit}
+                    onEdit={handleEditHabit}
+                    onUndo={undoCompletion}
                   />
                 ))
               )}
@@ -561,6 +801,8 @@ const App: React.FC = () => {
               onPurchase={purchaseReward}
               rewards={gameState.rewards}
               onAddReward={addReward}
+              onEditReward={handleEditReward}
+              onDeleteReward={handleDeleteReward}
             />
           </div>
         )}
@@ -570,6 +812,36 @@ const App: React.FC = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={addHabit}
+      />
+
+      <EditHabitModal
+        isOpen={showEditHabitModal}
+        onClose={() => {
+          setShowEditHabitModal(false);
+          setEditingHabit(null);
+        }}
+        onSave={updateHabit}
+        habit={editingHabit}
+      />
+
+      <EditRewardModal
+        isOpen={showEditRewardModal}
+        onClose={() => {
+          setShowEditRewardModal(false);
+          setEditingReward(null);
+        }}
+        onSave={updateRewardHandler}
+        reward={editingReward}
+      />
+
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        stats={gameState.stats}
+        onUpdateName={handleUpdatePlayerName}
+        onResetProgress={handleResetProgress}
+        onExport={handleExport}
+        onImport={handleImport}
       />
 
       {/* Footer */}
