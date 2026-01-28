@@ -1,0 +1,8 @@
+{
+  "name": "QuestBound: Habit RPG",
+  "description": "A gamified habit tracker that turns your daily routines into epic quests. Level up your character, earn gold, and consult your AI Spirit Guide for personalized motivation and strategy.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
