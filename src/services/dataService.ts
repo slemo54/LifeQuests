@@ -249,7 +249,7 @@ export const createReward = async (reward: Omit<Reward, 'id'>): Promise<Reward |
 };
 
 export const updateReward = async (reward: Reward): Promise<boolean> => {
-    if (!isSupabaseConfigured() || !supabase) return false;
+    if (!isSupabaseConfigured() || !supabase) return true;
 
     try {
         const { error } = await supabase
@@ -260,7 +260,8 @@ export const updateReward = async (reward: Reward): Promise<boolean> => {
                 icon: reward.icon,
                 updated_at: new Date().toISOString()
             })
-            .eq('id', reward.id);
+            .eq('id', reward.id)
+            .eq('user_id', DEFAULT_USER_ID);
 
         if (error) {
             console.error('Error updating reward:', error);

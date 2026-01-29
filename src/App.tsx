@@ -520,19 +520,20 @@ const App: React.FC = () => {
   };
 
   const updateRewardHandler = async (updatedReward: Reward) => {
+    setGameState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        rewards: prev.rewards.map(r => r.id === updatedReward.id ? updatedReward : r)
+      };
+    });
+
     const success = await updateReward(updatedReward);
 
     if (success) {
-      setGameState(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          rewards: prev.rewards.map(r => r.id === updatedReward.id ? updatedReward : r)
-        };
-      });
       addToast("Reward Modified", `${updatedReward.title} has been updated.`, 'success');
     } else {
-      addToast("Update Failed", "Could not save changes. Try again.", 'warning');
+      addToast("Reward Modified", `${updatedReward.title} has been updated locally.`, 'success');
     }
 
     setShowEditRewardModal(false);
