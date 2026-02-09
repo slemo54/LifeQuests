@@ -651,7 +651,7 @@ const App: React.FC = () => {
 
 
   const purchaseReward = async (reward: Reward) => {
-    if (!gameState || gameState.stats.gold < reward.cost) return;
+    if (!gameState) return;
 
     const newStats = { ...gameState.stats, gold: gameState.stats.gold - reward.cost };
 

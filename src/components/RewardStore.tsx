@@ -102,14 +102,13 @@ const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, on
               </button>
               <button
                 onClick={() => onPurchase(reward)}
-                disabled={gold < reward.cost}
                 className={`flex-1 py-2 rounded-xl font-bold transition-all
                   ${gold >= reward.cost
                     ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white shadow-lg'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    : 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white shadow-lg'
                   }`}
               >
-                {gold >= reward.cost ? 'Acquire' : 'Not Enough Gold'}
+                {gold >= reward.cost ? 'Acquire' : 'Acquire (Debt)'}
               </button>
             </div>
           </div>
