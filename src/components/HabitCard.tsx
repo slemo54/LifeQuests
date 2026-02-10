@@ -17,20 +17,18 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSk
   const [floatText, setFloatText] = useState<{x: number, y: number, text: string} | null>(null);
 
   const handleComplete = (e: React.MouseEvent) => {
-    // Determine rewards for display
     const xp = XP_MAP[habit.difficulty];
     const gold = GOLD_MAP[habit.difficulty];
 
-    // Trigger floating text
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setFloatText({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
-        text: `+${xp} XP  +${gold} Gold`
+        text: `+${xp} XP  +${gold} CR`
     });
 
     setIsAnimating(true);
-    
+
     setTimeout(() => {
         onComplete(habit.id);
         setIsAnimating(false);
@@ -38,123 +36,125 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onDelete, onSk
     }, 600);
   };
 
-  const getDifficultyColor = (diff: string) => {
+  const getDifficultyStyle = (diff: string) => {
     switch (diff) {
-      case 'Easy': return 'text-emerald-400 border-emerald-900/50 bg-emerald-900/10';
-      case 'Medium': return 'text-amber-400 border-amber-900/50 bg-amber-900/10';
-      case 'Hard': return 'text-rose-400 border-rose-900/50 bg-rose-900/10';
-      default: return 'text-slate-400';
+      case 'Easy': return 'text-emerald-500 border-emerald-900/50 bg-emerald-950/30';
+      case 'Medium': return 'text-orange-500 border-orange-900/50 bg-orange-950/30';
+      case 'Hard': return 'text-red-500 border-red-900/50 bg-red-950/30';
+      default: return 'text-neutral-400';
     }
   };
 
   const getShieldStatus = () => {
-    if (!habit.lastGraceUsed) return 'Ready';
+    if (!habit.lastGraceUsed) return 'ready';
     const lastGrace = new Date(habit.lastGraceUsed);
     const today = new Date();
     const diffTime = Math.abs(today.getTime() - lastGrace.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    return diffDays > 7 ? 'Ready' : `Cooldown ${8 - diffDays}d`;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 7 ? 'ready' : `${8 - diffDays}d`;
   };
 
   const shieldStatus = getShieldStatus();
 
   return (
-    <div className={`rpg-card p-5 rounded-xl transition-all duration-300 group relative overflow-hidden ${habit.completedToday ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'} ${isAnimating ? 'ring-4 ring-yellow-500 scale-105 bg-yellow-900/20' : ''}`}>
-      
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-        <Icons.Sword />
-      </div>
+    <div className={`terminal-card p-4 rounded-lg transition-all duration-300 group relative ${habit.completedToday ? 'opacity-50' : 'hover:border-orange-500'} ${isAnimating ? 'ring-1 ring-orange-500 bg-orange-950/10' : ''}`}>
 
-      <div className="flex justify-between items-start gap-4 relative z-10">
+      <div className="flex justify-between items-start gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${getDifficultyColor(habit.difficulty)}`}>
+          {/* Tags row */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border mono ${getDifficultyStyle(habit.difficulty)}`}>
               {habit.difficulty}
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border text-indigo-400 border-indigo-900/50 bg-indigo-900/10">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border text-neutral-400 border-neutral-800 bg-neutral-900/50 mono">
                 {habit.frequency}
             </span>
-            <div className="flex items-center gap-1 bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700/50">
-                <span className="text-orange-500 text-xs">🔥 {habit.streak}</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-800 bg-neutral-900/50">
+                <span className="text-orange-500 text-xs mono">{habit.streak}</span>
+                <span className="text-neutral-600 text-[10px]">streak</span>
             </div>
-             <div className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${
-                 shieldStatus === 'Ready' 
-                 ? 'text-cyan-400 border-cyan-900/50 bg-cyan-900/10' 
-                 : 'text-slate-500 border-slate-700/50 bg-slate-800/30'
-             }`}>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-medium mono ${
+                shieldStatus === 'ready'
+                ? 'text-cyan-500 border-cyan-900/50 bg-cyan-950/30'
+                : 'text-neutral-600 border-neutral-800 bg-neutral-900/50'
+            }`}>
                 <Icons.Shield />
-                <span>{shieldStatus === 'Ready' ? 'Shielded' : shieldStatus}</span>
+                <span>{shieldStatus}</span>
             </div>
           </div>
-          <h3 className="text-lg font-bold text-slate-100 mb-1 group-hover:text-yellow-500 transition-colors truncate pr-2">{habit.title}</h3>
-          <p className="text-sm text-slate-400 line-clamp-2">{habit.description}</p>
+
+          {/* Title & Description */}
+          <h3 className="text-base font-semibold text-neutral-100 mb-1 group-hover:text-orange-500 transition-colors truncate pr-2">{habit.title}</h3>
+          {habit.description && (
+            <p className="text-sm text-neutral-500 line-clamp-2">{habit.description}</p>
+          )}
         </div>
 
+        {/* Action buttons */}
         <div className="flex flex-col gap-2 shrink-0 relative">
-            <button 
-            onClick={handleComplete}
-            disabled={habit.completedToday}
-            className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all shadow-lg relative overflow-visible
-                ${habit.completedToday 
-                ? 'bg-slate-700 cursor-not-allowed' 
-                : 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 active:scale-95 shadow-yellow-500/20'
-                }`}
+            <button
+              onClick={handleComplete}
+              disabled={habit.completedToday}
+              className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all relative overflow-visible border
+                  ${habit.completedToday
+                  ? 'bg-neutral-900 border-neutral-800 cursor-not-allowed text-neutral-600'
+                  : 'bg-orange-500 border-orange-500 hover:bg-orange-400 active:scale-95 text-black'
+                  }`}
             >
-            {habit.completedToday ? (
-                <Icons.Check />
-            ) : (
-                <Icons.Sword />
-            )}
-            
-            {/* Floating Text Animation */}
-            {floatText && (
-                <span 
-                    className="floating-text text-yellow-300 text-sm whitespace-nowrap"
-                    style={{ left: -50, top: -20 }}
-                >
-                    {floatText.text}
-                </span>
-            )}
+              {habit.completedToday ? (
+                  <Icons.Check />
+              ) : (
+                  <span className="text-lg font-bold mono">GO</span>
+              )}
+
+              {floatText && (
+                  <span
+                      className="floating-text text-orange-400 text-sm whitespace-nowrap mono"
+                      style={{ left: -50, top: -20 }}
+                  >
+                      {floatText.text}
+                  </span>
+              )}
             </button>
-            
+
             {habit.completedToday ? (
                 <button
                     onClick={() => onUndo(habit.id)}
-                    className="text-[10px] text-yellow-500 hover:text-yellow-300 font-bold uppercase tracking-wider py-1"
-                    title="Undo today's completion"
+                    className="text-[10px] text-orange-500 hover:text-orange-400 font-medium uppercase tracking-wider py-1 mono"
+                    title="Undo"
                 >
-                    Undo
+                    undo
                 </button>
             ) : (
                 <button
                     onClick={() => onSkip(habit.id)}
-                    className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider py-1"
-                    title="Use Divine Shield to skip without breaking streak (if available)"
+                    className="text-[10px] text-neutral-600 hover:text-neutral-400 font-medium uppercase tracking-wider py-1 mono"
+                    title="Skip with shield protection"
                 >
-                    Skip
+                    skip
                 </button>
             )}
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-slate-700/50 flex justify-between items-center text-xs">
-        <div className="flex gap-4">
-          <span className="text-blue-400 font-bold">+{XP_MAP[habit.difficulty]} XP</span>
-          <span className="text-yellow-500 font-bold">+{GOLD_MAP[habit.difficulty]} Gold</span>
+      {/* Footer */}
+      <div className="mt-4 pt-3 border-t border-neutral-800/50 flex justify-between items-center text-xs">
+        <div className="flex gap-3 mono">
+          <span className="text-orange-500">+{XP_MAP[habit.difficulty]} <span className="text-neutral-600">xp</span></span>
+          <span className="text-orange-500">+{GOLD_MAP[habit.difficulty]} <span className="text-neutral-600">cr</span></span>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-3 items-center">
           <button
             onClick={() => onEdit(habit.id)}
-            className="text-slate-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-neutral-600 hover:text-orange-500 opacity-0 group-hover:opacity-100 transition-all mono text-[10px] uppercase"
           >
-            Modify
+            edit
           </button>
           <button
             onClick={() => onDelete(habit.id)}
-            className="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-neutral-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all mono text-[10px] uppercase"
           >
-            Abandon
+            delete
           </button>
         </div>
       </div>

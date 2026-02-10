@@ -84,9 +84,9 @@ const App: React.FC = () => {
         setGameState({
           habits: [],
           rewards: [
-            { id: '1', title: 'Treat Yourself (Coffee)', cost: 30, icon: '☕' },
-            { id: '2', title: '1 Hour of Netflix', cost: 100, icon: '📺' },
-            { id: '3', title: 'New Gaming Gear', cost: 5000, icon: '🎧' },
+            { id: '1', title: 'Coffee Break', cost: 30, icon: '>' },
+            { id: '2', title: '1 Hour Netflix', cost: 100, icon: '>' },
+            { id: '3', title: 'New Gear', cost: 5000, icon: '>' },
           ],
           stats: INITIAL_STATS,
           history: []
@@ -115,7 +115,7 @@ const App: React.FC = () => {
   };
 
   const triggerConfetti = () => {
-    const colors = ['#eab308', '#3b82f6', '#ef4444', '#10b981', '#f97316'];
+    const colors = ['#f97316', '#ea580c', '#fb923c', '#fdba74', '#fed7aa'];
     for (let i = 0; i < 50; i++) {
       const el = document.createElement('div');
       el.className = 'confetti-piece';
@@ -249,7 +249,7 @@ const App: React.FC = () => {
       if (!prev) return prev;
       return { ...prev, habits: [...prev.habits, finalHabit] };
     });
-    addToast("Quest Accepted", `${habit.title} has been added to your log.`, 'success');
+    addToast("Task Created", `${habit.title} added to your routines.`, 'success');
   };
 
   const completeHabit = async (id: string) => {
@@ -270,34 +270,34 @@ const App: React.FC = () => {
     gold += goldGain;
 
     // Basic Success Toast
-    addToast("Quest Complete!", `+${xpGain} XP | +${goldGain} Gold`, 'success');
+    addToast("Task Complete", `+${xpGain} XP | +${goldGain} Credits`, 'success');
 
     // MILESTONE CHECKS
     if (newStreak === 7) {
       triggerConfetti();
       setLevelUpData({
         type: 'milestone',
-        title: '7 Day Champion!',
-        subtitle: 'Consistency is your weapon.',
-        rewards: '+50 Gold Bonus'
+        title: '7 Day Streak!',
+        subtitle: 'Consistency unlocked.',
+        rewards: '+50 Credits Bonus'
       });
       gold += 50;
     } else if (newStreak === 14) {
       triggerConfetti();
       setLevelUpData({
         type: 'milestone',
-        title: '2 Week Warrior!',
-        subtitle: 'Your discipline is forged in steel.',
-        rewards: '+150 Gold Bonus'
+        title: '2 Week Streak!',
+        subtitle: 'You\'re building momentum.',
+        rewards: '+150 Credits Bonus'
       });
       gold += 150;
     } else if (newStreak === 30) {
       triggerConfetti();
       setLevelUpData({
         type: 'milestone',
-        title: 'Legendary Status!',
-        subtitle: 'A month of mastery. You are a hero.',
-        rewards: '+500 Gold & +200 XP'
+        title: '30 Day Streak!',
+        subtitle: 'Habit mastery achieved.',
+        rewards: '+500 Credits & +200 XP'
       });
       gold += 500;
       xp += 200;
@@ -307,11 +307,11 @@ const App: React.FC = () => {
     if (habit.difficulty === 'Easy' && newStreak > 3 && newStreak % 5 === 0) {
       setTimeout(() => {
         const confirmed = window.confirm(
-          `⚔️ QUEST UPGRADE AVAILABLE! ⚔️\n\n` +
-          `You have completed "${habit.title}" for ${newStreak} days straight!\n` +
-          `You seem ready for a greater challenge.\n\n` +
-          `Upgrade difficulty to MEDIUM?\n` +
-          `(Rewards increase: +25 XP / +15 Gold)`
+          `UPGRADE AVAILABLE\n\n` +
+          `You've completed "${habit.title}" for ${newStreak} days.\n` +
+          `Ready for a challenge?\n\n` +
+          `Upgrade to MEDIUM?\n` +
+          `(+25 XP / +15 Credits per completion)`
         );
 
         if (confirmed) {
@@ -327,7 +327,7 @@ const App: React.FC = () => {
             });
             return { ...g, habits: updatedHabits };
           });
-          addToast("Difficulty Increased", "The path grows steeper, but the glory greater!", 'success');
+          addToast("Upgraded", "Difficulty increased to Medium.", 'success');
           triggerConfetti();
         }
       }, 1000);
@@ -349,8 +349,8 @@ const App: React.FC = () => {
       setLevelUpData({
         type: 'level',
         title: 'LEVEL UP!',
-        subtitle: `You are now a Level ${level} ${classTitle}`,
-        rewards: 'Full HP Restored'
+        subtitle: `Now Level ${level} ${classTitle}`,
+        rewards: 'Full Energy Restored'
       });
 
       // Heal on level up
@@ -392,11 +392,11 @@ const App: React.FC = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 7) {
-      addToast("Cooldown Active", "Divine Shield needs time to recharge.", 'warning');
+      addToast("Cooldown Active", "Shield recharging.", 'warning');
       return;
     }
 
-    if (window.confirm("Use Divine Shield to skip this quest today? You won't gain XP, but your streak will be safe.")) {
+    if (window.confirm("Use shield to skip today? No XP gain, but streak is protected.")) {
       const updatedHabit: Habit = {
         ...habit,
         completedToday: true,
@@ -413,12 +413,12 @@ const App: React.FC = () => {
           habits: prev.habits.map(h => h.id === id ? updatedHabit : h)
         };
       });
-      addToast("Divine Shield Activated", "Streak protected. Rest well, hero.", 'info');
+      addToast("Shield Activated", "Streak protected.", 'info');
     }
   };
 
   const handleDeleteHabit = async (id: string) => {
-    if (window.confirm("Are you sure you want to abandon this quest?")) {
+    if (window.confirm("Delete this task?")) {
       // Delete from Supabase
       await deleteHabitFromDb(id);
 
@@ -451,9 +451,9 @@ const App: React.FC = () => {
           habits: prev.habits.map(h => h.id === updatedHabit.id ? updatedHabit : h)
         };
       });
-      addToast("Quest Modified", `${updatedHabit.title} has been updated.`, 'success');
+      addToast("Task Updated", `${updatedHabit.title} saved.`, 'success');
     } else {
-      addToast("Update Failed", "Could not save changes. Try again.", 'warning');
+      addToast("Update Failed", "Could not save changes.", 'warning');
     }
 
     setShowEditHabitModal(false);
@@ -469,13 +469,13 @@ const App: React.FC = () => {
     const today = new Date().toISOString().split('T')[0];
 
     if (!window.confirm(
-      `⚠️ UNDO QUEST COMPLETION? ⚠️\n\n` +
-      `This will reverse today's completion of "${habit.title}".\n\n` +
+      `UNDO COMPLETION?\n\n` +
+      `Reverse "${habit.title}" completion.\n\n` +
       `You will lose:\n` +
       `- ${XP_MAP[habit.difficulty]} XP\n` +
-      `- ${GOLD_MAP[habit.difficulty]} Gold\n` +
+      `- ${GOLD_MAP[habit.difficulty]} Credits\n` +
       `- 1 Streak Day\n\n` +
-      `Are you sure?`
+      `Confirm?`
     )) {
       return;
     }
@@ -511,7 +511,7 @@ const App: React.FC = () => {
       };
     });
 
-    addToast("Completion Undone", `${habit.title} marked incomplete.`, 'info');
+    addToast("Undone", `${habit.title} marked incomplete.`, 'info');
   };
 
   const handleEditReward = (reward: Reward) => {
@@ -531,9 +531,9 @@ const App: React.FC = () => {
     const success = await updateReward(updatedReward);
 
     if (success) {
-      addToast("Reward Modified", `${updatedReward.title} has been updated.`, 'success');
+      addToast("Reward Updated", `${updatedReward.title} saved.`, 'success');
     } else {
-      addToast("Reward Modified", `${updatedReward.title} has been updated locally.`, 'success');
+      addToast("Reward Updated", `${updatedReward.title} saved locally.`, 'success');
     }
 
     setShowEditRewardModal(false);
@@ -544,7 +544,7 @@ const App: React.FC = () => {
     const reward = gameState?.rewards.find(r => r.id === id);
     if (!reward) return;
 
-    if (window.confirm(`Remove "${reward.title}" from the bazaar?`)) {
+    if (window.confirm(`Delete "${reward.title}"?`)) {
       const success = await deleteReward(id);
 
       if (success) {
@@ -555,9 +555,9 @@ const App: React.FC = () => {
             rewards: prev.rewards.filter(r => r.id !== id)
           };
         });
-        addToast("Reward Removed", `${reward.title} removed from shop.`, 'info');
+        addToast("Deleted", `${reward.title} removed.`, 'info');
       } else {
-        addToast("Deletion Failed", "Could not remove reward. Try again.", 'warning');
+        addToast("Error", "Could not remove reward.", 'warning');
       }
     }
   };
@@ -573,20 +573,19 @@ const App: React.FC = () => {
         if (!prev) return prev;
         return { ...prev, stats: newStats };
       });
-      addToast("Identity Updated", `Welcome, ${newName}!`, 'success');
+      addToast("Updated", `Welcome, ${newName}!`, 'success');
     } else {
-      addToast("Update Failed", "Could not save name. Try again.", 'warning');
+      addToast("Error", "Could not save name.", 'warning');
     }
   };
 
   const handleResetProgress = async () => {
     const confirmed = window.confirm(
-      `⚠️ RESET ALL PROGRESS? ⚠️\n\n` +
+      `RESET ALL DATA?\n\n` +
       `This will permanently delete:\n` +
-      `- All quests and habits\n` +
+      `- All tasks\n` +
       `- All rewards\n` +
-      `- Your stats, level, and gold\n` +
-      `- All progress history\n\n` +
+      `- Stats and progress\n\n` +
       `Type "RESET" to confirm.`
     );
 
@@ -594,7 +593,7 @@ const App: React.FC = () => {
 
     const confirmText = prompt("Type RESET to confirm:");
     if (confirmText !== "RESET") {
-      addToast("Reset Cancelled", "Progress preserved.", 'info');
+      addToast("Cancelled", "Data preserved.", 'info');
       return;
     }
 
@@ -607,17 +606,17 @@ const App: React.FC = () => {
         stats: INITIAL_STATS,
         history: []
       });
-      addToast("Progress Reset", "Your journey begins anew.", 'info');
+      addToast("Reset Complete", "Starting fresh.", 'info');
       setShowSettingsModal(false);
     } else {
-      addToast("Reset Failed", "Could not reset progress. Try again.", 'warning');
+      addToast("Error", "Reset failed.", 'warning');
     }
   };
 
   const handleExport = () => {
     if (gameState) {
       exportGameState(gameState);
-      addToast("Data Exported", "Backup saved to downloads.", 'success');
+      addToast("Exported", "Backup downloaded.", 'success');
     }
   };
 
@@ -633,17 +632,17 @@ const App: React.FC = () => {
 
           if (success) {
             setGameState(data);
-            addToast("Data Restored", "Your journey has been successfully restored.", 'success');
+            addToast("Imported", "Data restored successfully.", 'success');
             setShowSettingsModal(false);
           } else {
-            addToast("Restore Failed", "Could not synchronize with the cloud.", 'warning');
+            addToast("Error", "Cloud sync failed.", 'warning');
           }
           setIsLoading(false);
         } else {
-          addToast("Import Failed", "Invalid save file format.", 'warning');
+          addToast("Error", "Invalid file format.", 'warning');
         }
       } catch (error) {
-        addToast("Import Failed", "Could not read save file.", 'warning');
+        addToast("Error", "Could not read file.", 'warning');
       }
     };
     reader.readAsText(file);
@@ -663,7 +662,7 @@ const App: React.FC = () => {
       return { ...prev, stats: newStats };
     });
     triggerConfetti();
-    addToast("Item Acquired", `${reward.title} added to inventory.`, 'success');
+    addToast("Claimed", `${reward.title} acquired.`, 'success');
   };
 
   const addReward = async (reward: Omit<Reward, 'id'>) => {
@@ -680,17 +679,17 @@ const App: React.FC = () => {
   // Loading state
   if (isLoading || !gameState) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="cinzel text-xl text-slate-400">Loading your quest log...</p>
+          <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-neutral-500 mono">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen pb-24 bg-slate-950 text-slate-100 selection:bg-yellow-500/30 ${isShaking ? 'screen-shake' : ''}`}>
+    <div className={`min-h-screen pb-24 bg-[#0a0a0a] text-neutral-100 grid-bg ${isShaking ? 'screen-shake' : ''}`}>
       <StatsHeader stats={gameState.stats} onOpenSettings={() => setShowSettingsModal(true)} />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
@@ -707,61 +706,61 @@ const App: React.FC = () => {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-neutral-800">
           <button
             onClick={() => setView('dashboard')}
-            className={`px-6 py-2 rounded-full font-bold cinzel border-2 transition-all shrink-0
-              ${view === 'dashboard' ? 'bg-yellow-600 border-yellow-500 text-white' : 'border-slate-800 text-slate-500 hover:text-slate-300'}`}
+            className={`px-4 py-2 font-medium transition-all shrink-0 mono text-sm border-b-2 -mb-[2px]
+              ${view === 'dashboard' ? 'border-orange-500 text-orange-500' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Quest Board
+            tasks
           </button>
           <button
             onClick={() => setView('analytics')}
-            className={`px-6 py-2 rounded-full font-bold cinzel border-2 transition-all shrink-0
-              ${view === 'analytics' ? 'bg-blue-600 border-blue-500 text-white' : 'border-slate-800 text-slate-500 hover:text-slate-300'}`}
+            className={`px-4 py-2 font-medium transition-all shrink-0 mono text-sm border-b-2 -mb-[2px]
+              ${view === 'analytics' ? 'border-orange-500 text-orange-500' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Chronicles
+            analytics
           </button>
           <button
             onClick={() => setView('spirit-guide')}
-            className={`px-6 py-2 rounded-full font-bold cinzel border-2 transition-all shrink-0
-              ${view === 'spirit-guide' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-800 text-slate-500 hover:text-slate-300'}`}
+            className={`px-4 py-2 font-medium transition-all shrink-0 mono text-sm border-b-2 -mb-[2px]
+              ${view === 'spirit-guide' ? 'border-orange-500 text-orange-500' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Spirit Guide
+            ai_assist
           </button>
           <button
             onClick={() => setView('shop')}
-            className={`px-6 py-2 rounded-full font-bold cinzel border-2 transition-all shrink-0
-              ${view === 'shop' ? 'bg-amber-700 border-amber-600 text-white' : 'border-slate-800 text-slate-500 hover:text-slate-300'}`}
+            className={`px-4 py-2 font-medium transition-all shrink-0 mono text-sm border-b-2 -mb-[2px]
+              ${view === 'shop' ? 'border-orange-500 text-orange-500' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            The Bazaar
+            rewards
           </button>
         </div>
 
         {view === 'dashboard' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-6 animate-in fade-in duration-300">
 
             <div className="flex justify-between items-center">
-              <h2 className="cinzel text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">Active Quests</h2>
+              <h2 className="text-xl font-semibold text-neutral-100">
+                <span className="text-orange-500 mono">$</span> Active Tasks
+              </h2>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm md:text-base shadow-lg hover:shadow-yellow-500/10"
+                className="bg-orange-500 hover:bg-orange-400 text-black px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 text-sm mono"
               >
-                🗡️ New Quest
+                + new_task()
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {gameState.habits.length === 0 ? (
-                <div className="col-span-full py-20 text-center space-y-4 bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-800">
-                  <div className="text-6xl grayscale opacity-30">📜</div>
-                  <h3 className="cinzel text-xl text-slate-500">Your quest log is empty, hero.</h3>
-                  <p className="text-slate-600">Commission a quest to begin your legend.</p>
+                <div className="col-span-full py-16 text-center terminal-card rounded-lg">
+                  <p className="text-neutral-600 mono mb-4">No tasks configured.</p>
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="text-yellow-500 font-bold hover:underline"
+                    className="text-orange-500 font-medium hover:text-orange-400 mono"
                   >
-                    Start a new quest
+                    + create your first task
                   </button>
                 </div>
               ) : (
@@ -786,17 +785,19 @@ const App: React.FC = () => {
         )}
 
         {view === 'spirit-guide' && (
-          <div className="max-w-3xl mx-auto animate-in fade-in duration-500">
-            <div className="mb-8 text-center space-y-4">
-              <h2 className="cinzel text-3xl font-bold text-indigo-400">The Ethereal Plane</h2>
-              <p className="text-slate-400 italic">"Seek the guide when the path is clouded by shadow."</p>
+          <div className="max-w-3xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-neutral-100 mb-2">
+                <span className="text-orange-500 mono">$</span> AI Assistant
+              </h2>
+              <p className="text-neutral-500 text-sm">Get personalized guidance and insights.</p>
             </div>
             <SpiritGuide stats={gameState.stats} habits={gameState.habits} />
           </div>
         )}
 
         {view === 'shop' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-300">
             <RewardStore
               gold={gameState.stats.gold}
               onPurchase={purchaseReward}
@@ -846,17 +847,17 @@ const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="w-full text-center py-4 text-slate-600 font-medium text-xs md:text-sm uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity">
+      <footer className="w-full text-center py-4 text-neutral-700 text-xs mono">
         Created by Anselmo Acquah
       </footer>
 
-      {/* Floating Action Button for mobile view toggle */}
+      {/* Mobile FAB */}
       <div className="fixed bottom-6 right-6 z-40 md:hidden">
         <button
           onClick={() => setView(view === 'dashboard' ? 'spirit-guide' : 'dashboard')}
-          className="w-14 h-14 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/40 border-2 border-slate-950 text-white"
+          className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-black font-bold mono"
         >
-          {view === 'dashboard' ? '🔮' : '⚔️'}
+          {view === 'dashboard' ? 'AI' : '<'}
         </button>
       </div>
     </div>

@@ -14,55 +14,57 @@ interface RewardStoreProps {
 
 const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, onAddReward, onEditReward, onDeleteReward }) => {
   const [showAdd, setShowAdd] = useState(false);
-  const [newReward, setNewReward] = useState({ title: '', cost: 50, icon: '🎁' });
+  const [newReward, setNewReward] = useState({ title: '', cost: 50, icon: '>' });
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="cinzel text-2xl font-bold text-yellow-500">The Grand Bazaar</h2>
-        <button 
+        <h2 className="text-xl font-semibold text-neutral-100">
+          <span className="text-orange-500 mono">$</span> Rewards Store
+        </h2>
+        <button
           onClick={() => setShowAdd(!showAdd)}
-          className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition-colors text-sm font-bold"
+          className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-neutral-400 hover:text-orange-500 hover:border-orange-500 transition-colors text-sm font-medium mono"
         >
-          {showAdd ? 'Close' : '+ New Reward'}
+          {showAdd ? 'close' : '+ new'}
         </button>
       </div>
 
       {showAdd && (
-        <div className="rpg-card p-6 rounded-2xl border-yellow-500/30">
-          <h3 className="text-lg font-bold text-slate-200 mb-4">Craft a Reward</h3>
+        <div className="terminal-card p-5 rounded-lg border-orange-500/30">
+          <h3 className="text-sm font-medium text-neutral-300 mb-4 mono uppercase tracking-wider">Create Reward</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase">Title</label>
-              <input 
-                type="text" 
+              <label className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mono">Title</label>
+              <input
+                type="text"
                 value={newReward.title}
                 onChange={e => setNewReward({...newReward, title: e.target.value})}
-                placeholder="e.g., 1 Hour Gaming"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-yellow-500"
+                placeholder="e.g., Coffee Break"
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-neutral-200 focus:border-orange-500 transition-colors"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase">Cost (Gold)</label>
-              <input 
-                type="number" 
+              <label className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mono">Cost (Credits)</label>
+              <input
+                type="number"
                 value={newReward.cost}
                 onChange={e => setNewReward({...newReward, cost: parseInt(e.target.value) || 0})}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-yellow-500"
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-neutral-200 focus:border-orange-500 transition-colors mono"
               />
             </div>
             <div className="flex items-end">
-              <button 
+              <button
                 onClick={() => {
                   if (newReward.title) {
                     onAddReward(newReward);
-                    setNewReward({ title: '', cost: 50, icon: '🎁' });
+                    setNewReward({ title: '', cost: 50, icon: '>' });
                     setShowAdd(false);
                   }
                 }}
-                className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition-all"
+                className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-2 rounded-lg transition-all mono"
               >
-                Stock the Shop
+                add_reward()
               </button>
             </div>
           </div>
@@ -71,49 +73,62 @@ const RewardStore: React.FC<RewardStoreProps> = ({ gold, onPurchase, rewards, on
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map(reward => (
-          <div key={reward.id} className="rpg-card p-5 rounded-2xl border-slate-700/50 hover:border-yellow-500/30 transition-all group relative">
-            {/* Delete button in top-right corner */}
+          <div key={reward.id} className="terminal-card p-4 rounded-lg group relative hover:border-orange-500 transition-all">
+            {/* Delete button */}
             <button
               onClick={() => onDeleteReward(reward.id)}
-              className="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Remove from shop"
+              className="absolute top-3 right-3 text-neutral-700 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+              title="Remove"
             >
-              ✕
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
 
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-4xl">{reward.icon}</span>
-              <div className="flex-1">
-                <h4 className="font-bold text-slate-100 group-hover:text-yellow-500 transition-colors">{reward.title}</h4>
-                <div className="flex items-center gap-1 text-yellow-500">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">{reward.icon}</span>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-neutral-100 group-hover:text-orange-500 transition-colors truncate">{reward.title}</h4>
+                <div className="flex items-center gap-1 text-orange-500 mono text-sm">
                   <Icons.Coin />
                   <span className="font-bold">{reward.cost}</span>
+                  <span className="text-neutral-600 text-xs">cr</span>
                 </div>
               </div>
             </div>
 
-            {/* Modify + Acquire buttons */}
+            {/* Action buttons */}
             <div className="flex gap-2">
               <button
                 onClick={() => onEditReward(reward)}
-                className="flex-1 py-2 rounded-xl font-bold border border-slate-700 text-slate-400 hover:bg-slate-800 transition-all"
+                className="flex-1 py-2 rounded-lg font-medium border border-neutral-800 text-neutral-500 hover:text-orange-500 hover:border-orange-500 transition-all text-sm mono"
               >
-                Modify
+                edit
               </button>
               <button
                 onClick={() => onPurchase(reward)}
-                className={`flex-1 py-2 rounded-xl font-bold transition-all
+                className={`flex-1 py-2 rounded-lg font-bold transition-all text-sm mono
                   ${gold >= reward.cost
-                    ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white shadow-lg'
-                    : 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white shadow-lg'
+                    ? 'bg-orange-500 hover:bg-orange-400 text-black'
+                    : 'bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50'
                   }`}
               >
-                {gold >= reward.cost ? 'Acquire' : 'Acquire (Debt)'}
+                {gold >= reward.cost ? 'claim' : 'debt'}
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {rewards.length === 0 && (
+        <div className="text-center py-12 terminal-card rounded-lg">
+          <p className="text-neutral-600 mono">No rewards configured.</p>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="text-orange-500 hover:text-orange-400 font-medium mt-2 mono"
+          >
+            + add your first reward
+          </button>
+        </div>
+      )}
     </div>
   );
 };
