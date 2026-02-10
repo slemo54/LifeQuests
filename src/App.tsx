@@ -812,7 +812,7 @@ const App: React.FC = () => {
       <AddHabitModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onAdd={addHabit}
+        onSave={addHabit}
       />
 
       <EditHabitModal
