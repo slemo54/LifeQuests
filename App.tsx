@@ -11,6 +11,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ToastContainer from './components/ToastContainer';
 import DailyBriefingModal from './components/DailyBriefingModal';
 import LevelUpModal, { LevelUpData } from './components/LevelUpModal';
+import CalendarIntegration from './components/CalendarIntegration';
 import { getDailyBriefing } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -456,6 +457,11 @@ const App: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Calendar Integration - Always visible at bottom */}
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+          <CalendarIntegration habits={gameState.habits} />
+        </div>
       </main>
 
       <AddHabitModal 
