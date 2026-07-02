@@ -99,8 +99,8 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({ habits }) => 
 
   const showNotification = (message: string) => {
     // Usa toast esistente o crea notifica
-    if (window.showToast) {
-      window.showToast('Orario aggiornato', message, 'info');
+    if ((window as any).showToast) {
+      (window as any).showToast('Orario aggiornato', message, 'info');
     }
   };
 
@@ -201,8 +201,8 @@ END:VCALENDAR`;
             onClick={syncToGoogleCalendar}
             disabled={syncStatus === 'syncing'}
           >
-            {syncStatus === 'syncing' > '⏳ Sync...' 
-              : syncStatus === 'synced' > '✅ Synced!' 
+            {syncStatus === 'syncing' ? '⏳ Sync...'
+              : syncStatus === 'synced' ? '✅ Synced!'
               : syncStatus === 'error'
               ? '❌ Retry'
               : '📅 Sync Google Calendar'}
